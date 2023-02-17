@@ -68,8 +68,10 @@ namespace H3WebServer
             int count = 0;
             for (int i = 0; i < response.Cookies.Count; i++)
             {
+                //Checks to see if client has jwt token
                 if (response.Cookies[i].Name == "jwttoken")
                 {
+                    //If expired we generate new
                     if (response.Cookies[i].Expired)
                     {
                         response.Cookies.Add(new Cookie("jwttoken", GenerateJWT()));
@@ -80,6 +82,7 @@ namespace H3WebServer
                     count++;
                 }
             }
+            //If the client does not have any jwt token cookie, we genereate one
             if(count == response.Cookies.Count)
             {
                 response.Cookies.Add(new Cookie("jwttoken", GenerateJWT()));
@@ -101,11 +104,15 @@ namespace H3WebServer
 
         private string GenerateJWT()
         {
-            Claim[] claims = new Claim[] { new Claim(JwtRegisteredClaimNames.Sub, "testuser") }; 
+            //Make array of claim, we can save username in our jwt token using claim
+            //Can also store user role, which can be used for authorization
+            Claim[] userclaims = new Claim[] { new Claim(ClaimTypes.Name, "testuser"),
+            new Claim(ClaimTypes.Role, "Admin")};
+            
             SymmetricSecurityKey secretkey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("ThisismySecretKey"));
             SigningCredentials credentials = new SigningCredentials(secretkey, SecurityAlgorithms.HmacSha256);
-            JwtSecurityToken token = new JwtSecurityToken("testissuer", "testaudience"
-                , claims,
+            JwtSecurityToken token = new JwtSecurityToken(issuer:"testissuer", audience: "testaudience"
+                ,claims: userclaims,
                 expires: DateTime.Now.AddMinutes(20),
                 signingCredentials: credentials
 
